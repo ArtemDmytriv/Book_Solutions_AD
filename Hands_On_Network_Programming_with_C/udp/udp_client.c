@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     hints.ai_socktype = SOCK_DGRAM;
 
     struct addrinfo *serv_addr;
-    const char *service = (argc == 3)? argv[2] : "53";
+    const char *service = (argc == 3)? argv[2] : "8080";
     if (getaddrinfo(argv[1], service, &hints, &serv_addr)) {
         fprintf(stderr, "getaddrinfo() failed. (%d)\n", errno);
         return EXIT_FAILURE;
@@ -42,15 +42,20 @@ int main(int argc, char *argv[])
     printf("Waiting User input:\n");
 
     while (fgets(buff + k, MAXBUFLEN, stdin)) {
-        k += strlen(buff + k);
+        int bytes_read = strlen(buff + k);
+        if (bytes_read == 1) {
+            break;
+        }
+        k += bytes_read;
     }
 
+    printf("Sending %d bytes...\n", k);
     int sent = 0;
     if ((sent = sendto(serv_sock, buff, k, 0, serv_addr->ai_addr, serv_addr->ai_addrlen)) != k) {
         fprintf(stderr, "sendto() failed, sent bytes = %d. (%d)\n", sent, errno);
         return EXIT_FAILURE;
     }
 
-
+    freeaddrinfo(serv_addr);
     return 0;
 }
