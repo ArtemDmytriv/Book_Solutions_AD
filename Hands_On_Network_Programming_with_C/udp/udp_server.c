@@ -60,6 +60,12 @@ int main(int argc, char *argv[])
     int bytes_received = recvfrom(listen_sock, buff, MAXBUFLEN, 0,
             (struct sockaddr*)&client_addr, &client_addrlen);
 
-    printf("Received %d bytes from ... :\n%.*s\n", bytes_received, bytes_received, buff);
+    char client_host_str[100] = {};
+    char client_serv_str[100] = {};
+    getnameinfo((const struct sockaddr *)&client_addr, client_addrlen,
+                    client_host_str, 100, client_serv_str, 100, NI_NUMERICHOST | NI_NUMERICSERV);
+
+    printf("Received %d bytes from ([%s]:%s) :\n%.*s\n", 
+                bytes_received, client_host_str, client_serv_str, bytes_received, buff);
     return 0;
 }
