@@ -21,10 +21,12 @@ int main(int argc, char *argv[])
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
     struct addrinfo *serv_addr;
     const char *service = (argc == 3)? argv[2] : "8080";
+
     if (getaddrinfo(argv[1], service, &hints, &serv_addr)) {
         fprintf(stderr, "getaddrinfo() failed. (%d)\n", errno);
         return EXIT_FAILURE;

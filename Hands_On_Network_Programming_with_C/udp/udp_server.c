@@ -40,6 +40,14 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    int no = 0;
+    if (setsockopt(listen_sock, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) < 0)
+        fprintf(stderr, "setsockopt(IPV6_V6ONLY) failed\n");
+
+    int yes = 1;
+    if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) < 0)
+        fprintf(stderr, "setsockopt(SO_REUSEADDR) failed\n");
+
     if (bind(listen_sock, serv_addr->ai_addr, serv_addr->ai_addrlen)) {
         fprintf(stderr, "bind() failed. (%d)\n", errno);
         return EXIT_FAILURE;
@@ -48,24 +56,27 @@ int main(int argc, char *argv[])
 
     printf("Listenning on port %s...\n", service);
 
-    int yes = 1;
-    if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) < 0)
-        fprintf(stderr, "setsockopt(SO_REUSEADDR) failed\n");
-
-
     struct sockaddr_storage client_addr;
     socklen_t client_addrlen = sizeof(client_addr);
     char buff[MAXBUFLEN] = {};
+    char ACK[] = "ACK";
+    int ACKlen = strlen(ACK);
 
-    int bytes_received = recvfrom(listen_sock, buff, MAXBUFLEN, 0,
-            (struct sockaddr*)&client_addr, &client_addrlen);
+    for (;;) {
+        // Recv msg
+        int bytes_received = recvfrom(listen_sock, buff, MAXBUFLEN, 0,
+                (struct sockaddr*)&client_addr, &client_addrlen);
 
-    char client_host_str[100] = {};
-    char client_serv_str[100] = {};
-    getnameinfo((const struct sockaddr *)&client_addr, client_addrlen,
-                    client_host_str, 100, client_serv_str, 100, NI_NUMERICHOST | NI_NUMERICSERV);
+        char client_host_str[100] = {};
+        char client_serv_str[100] = {};
+        getnameinfo((const struct sockaddr *)&client_addr, client_addrlen,
+                        client_host_str, 100, client_serv_str, 100, NI_NUMERICHOST | NI_NUMERICSERV);
 
-    printf("Received %d bytes from ([%s]:%s) :\n%.*s\n", 
-                bytes_received, client_host_str, client_serv_str, bytes_received, buff);
+        printf("Received %d bytes from ([%s]:%s) :\n<S>%.*s<E>\n",
+                    bytes_received, client_host_str, client_serv_str, bytes_received, buff);
+        // Send ACK
+        int bytes_sent = sendto(listen_sock, ACK, ACKlen,
+                        0, (struct sockaddr *)&client_addr, client_addrlen);
+    }
     return 0;
 }

@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    freeaddrinfo(bind_addr);
     if (listen(sock_listen, 20)) {
         fprintf(stderr, "listen() failed. (%d)\n", errno);
         return EXIT_FAILURE;
@@ -115,7 +116,6 @@ int main(int argc, char *argv[]) {
     }
 
     close(sock_listen);
-    freeaddrinfo(bind_addr);
 
     return EXIT_SUCCESS;
 }
